@@ -2,8 +2,7 @@ const express = require("express");
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const Supplier = require("../models/Supplier"); // Add this line
-
+const Supplier = require("../models/Supplier");
 
 const router = express.Router();
 
@@ -31,6 +30,19 @@ router.post("/signup", async (req, res) => {
     // Save user to database
     await user.save();
     console.log('User saved successfully:', user); // Debug log
+
+    // If the user is a supplier, create a supplier record
+    if (role === 'supplier') {
+      const supplier = new Supplier({
+        supplierName: username,
+        vehicleType: 'Not specified', // Default value
+        supplierQuantity: 0, // Default value
+        email: email
+      });
+
+      await supplier.save();
+      console.log('Supplier record created:', supplier); // Debug log
+    }
 
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
