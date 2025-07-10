@@ -3,7 +3,13 @@ const jwt = require('jsonwebtoken');
 const auth = async (req, res, next) => {
   try {
     // Get token from header
-    const token = req.header('Authorization')?.replace('Bearer ', '');
+    // Support both 'Authorization: Bearer <token>' and 'x-access-token' headers
+    let token = req.header('Authorization');
+    if (token && token.startsWith('Bearer ')) {
+      token = token.replace('Bearer ', '');
+    } else if (!token) {
+      token = req.header('x-access-token');
+    }
     
     if (!token) {
       return res.status(401).json({ message: 'No token, authorization denied' });

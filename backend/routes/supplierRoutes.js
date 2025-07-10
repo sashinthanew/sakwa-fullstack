@@ -1,112 +1,212 @@
 const express = require("express");
 const Supplier = require("../models/Supplier");
 const router = express.Router();
+const multer = require("multer");
+const path = require("path");
+const auth = require("../middleware/auth");
 
-// ➤ Get All Suppliers
-router.get("/", async (req, res) => {
+// Set up multer storage for profile photos
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, "../uploads"));
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + "-" + file.originalname);
+  },
+});
+const upload = multer({ storage: storage });
+
+// Get All Suppliers
+router.get("/", auth, async (req, res) => {
   try {
     const suppliers = await Supplier.find();
-    console.log("Found suppliers:", suppliers); // Debug log
     res.json(suppliers);
   } catch (error) {
-    console.error("Error in GET /suppliers:", error);
     res.status(500).json({ message: error.message });
   }
 });
 
-// ➤ Get a Single Supplier Profile
-router.get("/:id", async (req, res) => {
-  try {
-    console.log("Looking for supplier with ID:", req.params.id); // Debug log
-    const supplier = await Supplier.findById(req.params.id);
-    if (supplier) {
-      console.log("Found supplier:", supplier); // Debug log
-      res.json(supplier);
-    } else {
-      res.status(404).json({ message: "Supplier not found" });
-    }
-  } catch (error) {
-    console.error("Error in GET /suppliers/:id:", error);
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// ➤ Add a New Supplier
-router.post("/", async (req, res) => {
-  try {
-    console.log("Received supplier data:", req.body);
-
-    // Validate required fields
-    if (!req.body.supplierName || !req.body.vehicleType || !req.body.supplierQuantity) {
-      return res.status(400).json({ message: "Missing required fields" });
-    }
-
-    // Convert supplierQuantity to Number
-    const supplierQuantity = Number(req.body.supplierQuantity);
-    if (isNaN(supplierQuantity)) {
-      return res.status(400).json({ message: "Invalid quantity value" });
-    }
-
-    const supplier = new Supplier({
-      supplierName: req.body.supplierName,
-      vehicleType: req.body.vehicleType,
-      supplierQuantity: supplierQuantity,
-      profilePhoto: req.body.profilePhoto || '',
-      address: req.body.address || '',
-      phone: req.body.phone || '',
-      email: req.body.email || '',
-      department: req.body.department || '',
-      workTime: req.body.workTime || '',
-      workDates: req.body.workDates || '',
-      arrivalTime: req.body.arrivalTime || ''
-    });
-
-    console.log("Created supplier object:", supplier);
-
-    const newSupplier = await supplier.save();
-    console.log("Saved supplier:", newSupplier);
-    res.status(201).json(newSupplier);
-  } catch (error) {
-    console.error("Error saving supplier:", error);
-    res.status(400).json({ 
-      message: error.message,
-      details: error.errors
-    });
-  }
-});
-
-// ➤ Update a Supplier
-router.put("/:id", async (req, res) => {
-  try {
-    const supplier = await Supplier.findById(req.params.id);
-    if (supplier) {
-      supplier.supplierName = req.body.supplierName || supplier.supplierName;
-      supplier.vehicleType = req.body.vehicleType || supplier.vehicleType;
-      supplier.supplierQuantity = req.body.supplierQuantity || supplier.supplierQuantity;
-      supplier.profilePhoto = req.body.profilePhoto || supplier.profilePhoto;
-
-      const updatedSupplier = await supplier.save();
-      res.json(updatedSupplier);
-    } else {
-      res.status(404).json({ message: "Supplier not found" });
-    }
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-});
-
-// ➤ Delete a Supplier
-router.delete("/:id", async (req, res) => {
+// Get Single Supplier
+router.get("/:id", auth, async (req, res) => {
   try {
     const supplier = await Supplier.findById(req.params.id);
     if (!supplier) {
       return res.status(404).json({ message: "Supplier not found" });
     }
-
-    await Supplier.findByIdAndDelete(req.params.id);
-    res.json({ message: "Supplier removed successfully" });
+    res.json(supplier);
   } catch (error) {
-    console.error("Delete supplier error:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get Supplier Performance
+router.get("/:id/performance", auth, async (req, res) => {
+  try {
+    console.log(`Fetching performance for supplier: ${req.params.id}`);
+    const supplier = await Supplier.findById(req.params.id);
+    if (!supplier) {
+      console.log(`Supplier not found: ${req.params.id}`);
+      return res.status(404).json({ message: "Supplier not found" });
+    }
+
+    const deliveries = supplier.deliveries || [];
+    const totalDeliveries = deliveries.length;
+    let onTimeCount = 0;
+    let qualitySum = 0;
+
+    deliveries.forEach((delivery) => {
+      if (delivery.onTime) onTimeCount++;
+      qualitySum += delivery.qualityScore || 0;
+    });
+
+    const onTimeDeliveryRate = totalDeliveries === 0 ? 0 : (onTimeCount / totalDeliveries) * 100;
+    const averageQualityScore = totalDeliveries === 0 ? 0 : qualitySum / totalDeliveries;
+
+    res.json({
+      totalDeliveries,
+      onTimeDeliveryRate: onTimeDeliveryRate.toFixed(2) + "%",
+      averageQualityScore: averageQualityScore.toFixed(2),
+      performanceData: deliveries.map((d) => ({
+        date: d.date,
+        quantity: d.quantity,
+        qualityScore: d.qualityScore,
+        onTime: d.onTime,
+      })),
+    });
+  } catch (error) {
+    console.error(`Error in GET /:id/performance:`, error);
+    res.status(500).json({
+      message: "Error fetching performance data",
+      error: error.message,
+    });
+  }
+});
+
+// Add Supplier Performance Data
+router.post("/:id/performance", auth, async (req, res) => {
+  try {
+    const { quantity, qualityScore, onTime } = req.body;
+
+    if (typeof quantity !== "number" || isNaN(quantity)) {
+      return res.status(400).json({ message: "Invalid quantity" });
+    }
+    if (typeof qualityScore !== "number" || qualityScore < 0 || qualityScore > 100) {
+      return res.status(400).json({ message: "Quality score must be between 0-100" });
+    }
+    if (typeof onTime !== "boolean") {
+      return res.status(400).json({ message: "onTime must be boolean" });
+    }
+
+    const supplier = await Supplier.findById(req.params.id);
+    if (!supplier) {
+      return res.status(404).json({ message: "Supplier not found" });
+    }
+
+    supplier.deliveries.push({
+      date: new Date(),
+      quantity,
+      qualityScore,
+      onTime,
+    });
+
+    await supplier.save();
+    res.status(201).json(supplier.deliveries);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Add New Supplier
+router.post("/", auth, upload.single("profilePhoto"), async (req, res) => {
+  try {
+    const { supplierName, vehicleType, supplierQuantity } = req.body;
+    if (!supplierName || !vehicleType || supplierQuantity === undefined) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+    let profilePhoto = "";
+    if (req.file) {
+      profilePhoto = `uploads/${req.file.filename}`;
+    } else if (req.body.profilePhoto) {
+      profilePhoto = req.body.profilePhoto;
+    }
+    const supplier = new Supplier({
+      supplierName,
+      vehicleType,
+      supplierQuantity,
+      profilePhoto,
+    });
+    await supplier.save();
+    res.status(201).json(supplier);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Update Supplier
+router.put("/:id", auth, upload.single("profilePhoto"), async (req, res) => {
+  try {
+    const { supplierName, vehicleType, supplierQuantity, address, department, workTime, workDates, phone, email } = req.body;
+    let updateData = {
+      supplierName,
+      vehicleType,
+      supplierQuantity,
+      address,
+      department,
+      workTime,
+      workDates,
+      phone,
+      email,
+    };
+    Object.keys(updateData).forEach((key) => updateData[key] === undefined && delete updateData[key]);
+    if (req.file) {
+      updateData.profilePhoto = `uploads/${req.file.filename}`;
+    }
+    const supplier = await Supplier.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    if (!supplier) {
+      return res.status(404).json({ message: "Supplier not found" });
+    }
+    res.json(supplier);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get Supplier Performance Dashboard Data
+router.get("/performance/dashboard", auth, async (req, res) => {
+  try {
+    const suppliers = await Supplier.find();
+    const totalSuppliers = suppliers.length;
+    const totalQuantity = suppliers.reduce((sum, s) => sum + (s.supplierQuantity || 0), 0);
+    const avgQuantity = totalSuppliers ? totalQuantity / totalSuppliers : 0;
+    const vehicleTypeCounts = {};
+    suppliers.forEach((s) => {
+      if (s.vehicleType) {
+        vehicleTypeCounts[s.vehicleType] = (vehicleTypeCounts[s.vehicleType] || 0) + 1;
+      }
+    });
+    const topVehicleType = Object.entries(vehicleTypeCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "";
+    res.json({
+      totalSuppliers,
+      avgQuantity,
+      topVehicleType,
+      vehicleTypeCounts,
+      suppliers,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Delete Supplier
+router.delete("/:id", auth, async (req, res) => {
+  try {
+    const supplier = await Supplier.findByIdAndDelete(req.params.id);
+    if (!supplier) {
+      return res.status(404).json({ message: "Supplier not found" });
+    }
+    res.json({ message: "Supplier deleted successfully" });
+  } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
