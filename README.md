@@ -106,7 +106,7 @@ A full-stack web application built to digitize and automate the operations of Sa
 
 This was my final year individual project for my BIT (Hons) degree.
 
-## 📌 Problem Statement
+Problem Statement
 
 Sakwa Canneries managed core operations — task tracking, production records, and reporting — manually through Excel spreadsheets. This led to:
 - Data entry errors and duplication
@@ -117,7 +117,7 @@ Sakwa Canneries managed core operations — task tracking, production records, a
 
 The system I built replaces this manual workflow with a role-based web application that digitizes data entry, automates reporting, and adds an AI-assisted quality check for incoming fish stock.
 
-## ✨ Key Features
+ Key Features
 
 - **Digitized Data Entry Interfaces** — Replaced Excel sheets with structured web forms for recording canning operations and production data
 - **Role-Based Access Control (RBAC)** — Different employee roles (e.g. admin, staff, production supervisor) have scoped access to only the features and data relevant to them
@@ -125,7 +125,7 @@ The system I built replaces this manual workflow with a role-based web applicati
 - **Reporting & Export** — Generate and download operational/production reports directly from the system
 - **AI Fish Quality Scanning** — An AI-based feature that scans/classifies fish types and helps determine whether the fish meets quality standards for production, reducing reliance on manual visual inspection
 
-## 🛠️ Tech Stack
+Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -134,14 +134,13 @@ The system I built replaces this manual workflow with a role-based web applicati
 | Database | MongoDB |
 | AI/Fish Scanning | *(add: e.g. TensorFlow.js / a trained image classification model / API used)* |
 
-## 🚀 Getting Started
+Getting Started
 
-### Prerequisites
-- Node.js (vXX or higher)
+Prerequisites
+- Node.js 
 - MongoDB (local instance or Atlas connection string)
-- npm or yarn
-
-### Installation
+- npm 
+Installation
 
 ```bash
 # Clone the repository
@@ -157,7 +156,7 @@ cd ../frontend
 npm install
 ```
 
-### Environment Variables
+Environment Variables
 
 Create a `.env` file in the backend folder with:
 
@@ -166,8 +165,7 @@ MONGODB_URI=your_mongodb_connection_string
 PORT=5000
 JWT_SECRET=your_jwt_secret
 ```
-
-### Running Locally
+Running Locally
 
 ```bash
 # Start backend
@@ -185,4 +183,4 @@ Individual project — I designed and built the full system end-to-end: frontend
 
 Challenges & What I Learned
 
-*(fill in 2–4 sentences — e.g. designing RBAC from scratch, integrating an AI model into a MERN-style stack, handling reporting/export logic, real-world requirements gathering from a business with no prior digital system)*
+designing RBAC from scratch, integrating an AI model into a MERN-style stack, handling reporting/export logic, real-world requirements gathering from a business with no prior digital system)*
