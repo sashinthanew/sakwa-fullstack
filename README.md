@@ -99,50 +99,90 @@ Here is the complete project structure with descriptions:
 └── RBAC_README.md (Markdown documentation)
 ```
 
-## Dependencies
 
-This project uses npm for package management. Key dependencies can be found in `package.json`.
+# Sakwa Canneries Management System
 
-## Setup and Installation
+A full-stack web application built to digitize and automate the operations of Sakwa Canneries, a fish canning company that previously relied entirely on manual, Excel-based processes for tracking production, tasks, and reporting.
 
-### Node.js Setup
+This was my final year individual project for my BIT (Hons) degree.
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/sashinthanew/sakwa-fullstack.git
-   cd sakwa-fullstack
-   ```
+## 📌 Problem Statement
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+Sakwa Canneries managed core operations — task tracking, production records, and reporting — manually through Excel spreadsheets. This led to:
+- Data entry errors and duplication
+- No centralized access or audit trail
+- Slow, manual report generation
+- No way to control who could access or edit sensitive operational data
+- No systematic way to verify raw material (fish) quality before production
 
-## Running the Application
+The system I built replaces this manual workflow with a role-based web application that digitizes data entry, automates reporting, and adds an AI-assisted quality check for incoming fish stock.
 
-## Repository Information
+## ✨ Key Features
 
-- **Created**: June 14, 2025
-- **Last Updated**: July 10, 2025
-- **Default Branch**: main
+- **Digitized Data Entry Interfaces** — Replaced Excel sheets with structured web forms for recording canning operations and production data
+- **Role-Based Access Control (RBAC)** — Different employee roles (e.g. admin, staff, production supervisor) have scoped access to only the features and data relevant to them
+- **Task Management** — Digitized tracking of canning operation tasks that were previously coordinated manually
+- **Reporting & Export** — Generate and download operational/production reports directly from the system
+- **AI Fish Quality Scanning** — An AI-based feature that scans/classifies fish types and helps determine whether the fish meets quality standards for production, reducing reliance on manual visual inspection
 
-## Contributing
+## 🛠️ Tech Stack
 
-Contributions are welcome! To contribute:
+| Layer | Technology |
+|---|---|
+| Frontend | React |
+| Backend | Node.js |
+| Database | MongoDB |
+| AI/Fish Scanning | *(add: e.g. TensorFlow.js / a trained image classification model / API used)* |
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+## 🚀 Getting Started
 
-Please ensure:
+### Prerequisites
+- Node.js (vXX or higher)
+- MongoDB (local instance or Atlas connection string)
+- npm or yarn
 
-- All tests pass
-- Code follows project style guidelines
-- Appropriate documentation is added
+### Installation
 
----
+```bash
+# Clone the repository
+git clone https://github.com/<your-username>/sakwa-canneries-system.git
+cd sakwa-canneries-system
 
-This README was automatically generated through comprehensive analysis of the repository.
-Generated on: June 20, 2026 at 10:46 AM
+# Install backend dependencies
+cd backend
+npm install
+
+# Install frontend dependencies
+cd ../frontend
+npm install
+```
+
+### Environment Variables
+
+Create a `.env` file in the backend folder with:
+
+```
+MONGODB_URI=your_mongodb_connection_string
+PORT=5000
+JWT_SECRET=your_jwt_secret
+```
+
+### Running Locally
+
+```bash
+# Start backend
+cd backend
+npm start
+
+# Start frontend (in a separate terminal)
+cd frontend
+npm start
+```
+
+The app will be available at `http://localhost:3000` (frontend) with the API running on `http://localhost:5000`
+
+Individual project — I designed and built the full system end-to-end: frontend UI, backend API, database schema, role-based authentication/authorization, reporting/export functionality, and the AI fish quality scanning feature.
+
+Challenges & What I Learned
+
+*(fill in 2–4 sentences — e.g. designing RBAC from scratch, integrating an AI model into a MERN-style stack, handling reporting/export logic, real-world requirements gathering from a business with no prior digital system)*
